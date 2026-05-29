@@ -7,40 +7,52 @@ public class Program {
     static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
+        // Arquivo de entrada com os dados originais
         File file = new File("C:\\Users\\Pablo\\Documents\\dados.txt");
+
+        // O usuário informa onde quer salvar o arquivo de saída
+        // Ex: C:\Users\Pablo\Documents\out\summary.csv
         System.out.println("Onde deseja criar o novo arquivo: ");
-        String newPath = sc.nextLine(); // Como o nome do arquivo já é conhecido, basta informar o caminho onde ele deve ser criado. Ex: C:\\Users\\Pablo\\Documents\\out\\summary.txt
-        File fileOut = new File(newPath); // Criando o arquivo de saída, utilizando o caminho informado pelo usuário. O nome do arquivo é "summary.csv",
-                                            // mas pode ser alterado conforme a necessidade. O importante é que o caminho seja válido e que o programa tenha permissão para criar arquivos nesse local.
-        System.out.println(fileOut.getAbsolutePath()); // Exibindo o caminho absoluto do arquivo de saída para confirmar que o caminho foi interpretado corretamente.
-                                                        // Isso é útil para verificar se o caminho informado pelo usuário está correto e se o programa está apontando para o local desejado.
-        System.out.println(fileOut.getParentFile().mkdirs()); // Criando os diretórios necessários para o arquivo de saída, caso eles não existam. O método mkdirs() cria todos os diretórios necessários para o caminho especificado.
-                                                                // Se os diretórios já existirem, ele simplesmente retorna false, mas isso não impede a criação do arquivo de saída.
-                                                                // É importante garantir que o programa tenha permissão para criar diretórios e arquivos no local especificado.
-        boolean mkdirs = fileOut.getParentFile().mkdirs();
+        String newPath = sc.nextLine();
 
+        // Cria o objeto File apontando pro caminho informado
+        File fileOut = new File(newPath);
 
+        // Cria a pasta de destino caso ela não exista
+        // getParentFile() retorna a pasta pai do arquivo (ex: "out")
+        // mkdirs() cria ela e qualquer pasta intermediária que falte
+        // Retorna false se já existir — sem problema, não impede a escrita
+        fileOut.getParentFile().mkdirs();
+
+        // try-with-resources: abre leitura e escrita juntos
+        // Ambos fecham automaticamente ao final, mesmo se der erro
         try (BufferedReader br = new BufferedReader(new FileReader(file));
-         BufferedWriter bw = new BufferedWriter(new FileWriter(fileOut))) { // Utilizando try-with-resources para garantir que os recursos sejam fechados automaticamente. O BufferedReader é usado para ler o arquivo de entrada, e o BufferedWriter é usado para escrever no arquivo de saída.
+             BufferedWriter bw = new BufferedWriter(new FileWriter(fileOut))) {
 
-           String line = br.readLine();
-           String[] partes;
-           double total;
+            String line = br.readLine(); // Lê a primeira linha antes do loop
+            String[] partes;             // Array que vai guardar as colunas de cada linha
+            double total;                // Total unitário de cada item (preço x quantidade)
 
-           while (line != null){
-               partes = line.split(",");
-               System.out.println(partes[0] + " R$" + partes[1]);
-               total = Double.parseDouble(partes[1]) * Integer.parseInt(partes[2]);
-               System.out.println(total);
-               bw.write(partes[0] +" R$ "+ total);
-               line = br.readLine();
-               bw.newLine();
-           }
+            while (line != null) {
+                // split(",") quebra a linha pelo separador vírgula
+                // partes[0] = nome | partes[1] = preço | partes[2] = quantidade
+                partes = line.split(",");
 
-       }  catch (IOException e){
-           System.out.println("ERRO: " + e.getMessage());
-       }
-        System.out.println();
-sc.close();
+                // Converte String para número para poder multiplicar
+                // parseDouble para valores decimais, parseInt para inteiros
+                total = Double.parseDouble(partes[1]) * Integer.parseInt(partes[2]);
+
+                // Escreve uma linha no arquivo de saída: nome,total
+                bw.write(partes[0] + "," + total);
+                bw.newLine(); // Pula linha no arquivo (equivalente ao \n)
+
+                line = br.readLine(); // Lê a próxima linha — null quando acabar o arquivo
+            }
+
+        } catch (IOException e) {
+            System.out.println("ERRO: " + e.getMessage());
+        }
+
+        sc.close();
     }
 }
